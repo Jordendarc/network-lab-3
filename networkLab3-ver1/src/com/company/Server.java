@@ -31,49 +31,44 @@ public class Server {
         BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         String str;
         while((str = br.readLine()) != null) {
-
-            if (str.contains("login")) {
-                if(str.split(" ").length != 3){
-                    pw.println("Server: ERROR invalid login format");
-                }
-                else if (login(str)) {
-                    pw.println("Server: Welcome " + loggedInUser);
-                } else
-                    pw.println("Server: ERROR cannot find username");
-            }
-            else if (str.equals("logout")) {
-                if(loggedIn) {
-                    pw.println("Goodbye " + loggedInUser);
-                    logout();
-                }
-                else {
-                    pw.println("System: ERROR cannot logout user not logged in");
-                }
-            }
-            else if (str.split(" ",2)[0].contains("send")){
-                if(loggedIn)
-                    pw.println(send(str));
-                else
-                    pw.println("Server: ERROR not logged in");
-            }
-            else if (str.contains("newuser")) {
-                if(str.split(" ").length != 3){
-                    pw.println("Server: ERROR invalid create user format");
-                }
-                else if (str.split(" ")[1].length() > 32){
-                    pw.println("Server: ERROR username must be under 32 characters");
-                }
-                else if (str.split(" ")[2].length() > 8 || str.split(" ")[2].length() < 4 ){
-                    pw.println("Server: ERROR password must be between 4 and 8 characters long");
-                }
-                else {
-                    if(newuser(str)){
-                        pw.println("Server: account created");
+            if(validateUserInput(str)) {
+                if (str.contains("login")) {
+                    if (str.split(" ").length != 3) {
+                        pw.println("Server: ERROR invalid login format");
+                    } else if (login(str)) {
+                        pw.println("Server: Welcome " + loggedInUser);
+                    } else
+                        pw.println("Server: ERROR cannot find username");
+                } else if (str.equals("logout")) {
+                    if (loggedIn) {
+                        pw.println("Goodbye " + loggedInUser);
+                        logout();
+                    } else {
+                        pw.println("System: ERROR cannot logout user not logged in");
                     }
-                    else{
-                        pw.println("Server: ERROR account could not be created");
+                } else if (str.split(" ", 2)[0].contains("send")) {
+                    if (loggedIn)
+                        pw.println(send(str));
+                    else
+                        pw.println("Server: ERROR not logged in");
+                } else if (str.contains("newuser")) {
+                    if (str.split(" ").length != 3) {
+                        pw.println("Server: ERROR invalid create user format");
+                    } else if (str.split(" ")[1].length() > 32) {
+                        pw.println("Server: ERROR username must be under 32 characters");
+                    } else if (str.split(" ")[2].length() > 8 || str.split(" ")[2].length() < 4) {
+                        pw.println("Server: ERROR password must be between 4 and 8 characters long");
+                    } else {
+                        if (newuser(str)) {
+                            pw.println("Server: account created");
+                        } else {
+                            pw.println("Server: ERROR account could not be created");
+                        }
                     }
                 }
+            }
+            else {
+                pw.println("Server: please enter valid commands");
             }
 
             if (exit) {
@@ -82,6 +77,15 @@ public class Server {
                 break;
             }
         }
+    }
+    public static boolean validateUserInput(String input){
+        if(!input.contains("send") ){
+            if(!input.contains("newuser"))
+                if( !input.contains("login"))
+                    if( !input.equals("logout"))
+                        return false;
+        }
+        return true;
     }
 
     private static boolean login(String input){
@@ -94,7 +98,7 @@ public class Server {
             while((line = bufferedReader.readLine()) != null) {
                 String[] usrAndPwd = line.split(",");
                 String[] inputs = input.split(" ");
-                if(inputs[1].strip().equals(usrAndPwd[0].strip())){
+                if(inputs[1].strip().equals(usrAndPwd[0].strip()) && inputs[2].strip().equals(usrAndPwd[1].strip()) ){
                     loggedIn = true;
                     loggedInUser = inputs[1];
                     System.out.println(loggedInUser + " login");
@@ -125,17 +129,19 @@ public class Server {
             String[] splitInputs = input.split(" ");
             String line = "";
             FileReader fileReader = new FileReader("C:\\Users\\jorwh\\IdeaProjects\\networkLab3\\src\\com\\company\\logins.txt");
-
+            String possibleFound = "";
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             while ((line = bufferedReader.readLine()) != null) {
                 String[] usrAndPwd = line.split(",");
-                if (splitInputs[1].strip().equals(usrAndPwd[0].strip()) && splitInputs[2].strip().equals(usrAndPwd[1].strip())) {
+                if (splitInputs[1].strip().equals(usrAndPwd[0].strip())) {
+                    possibleFound = usrAndPwd[1];
                     userCreated = false;
                     break;
                 }
             }
             bufferedReader.close();
             if(userCreated){
+                System.out.println("dont worry, " + splitInputs[1] + "does not equal " + possibleFound);
                 FileWriter fileWriter = new FileWriter("C:\\Users\\jorwh\\IdeaProjects\\networkLab3\\src\\com\\company\\logins.txt", true);
                 fileWriter.write("\n" + splitInputs[1]+","+splitInputs[2]);
                 fileWriter.close();
